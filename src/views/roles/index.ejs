@@ -1,0 +1,165 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<!-- Header Description -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between pb-4 border-b border-slate-900 gap-4">
+  <div>
+    <h1 class="text-3xl font-extrabold font-outfit text-white tracking-tight font-outfit">Security Profiles (Roles)</h1>
+    <p class="text-slate-400 text-sm mt-1">Define security profiles, create roles, and map resource permission access matrices.</p>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (locals.error) { %>
+  <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-exclamation text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Error:</span>
+      <p class="mt-0.5"><%= error %></p>
+    </div>
+  </div>
+<% } %>
+
+<% if (locals.success) { %>
+  <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-check text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Success:</span>
+      <p class="mt-0.5"><%= success %></p>
+    </div>
+  </div>
+<% } %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Left Column: Add Role Form (1 col span) -->
+  <div>
+    <% 
+      const isAdmin = user.role_name.toLowerCase() === 'admin';
+      const canCreateRole = isAdmin || user.permissions.includes('role:create');
+    %>
+
+    <% if (canCreateRole) { %>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2 border-b border-slate-800 pb-3">
+          <i class="fa-solid fa-folder-plus text-indigo-400 text-sm"></i>
+          <span>Create Security Role</span>
+        </h2>
+
+        <form action="/roles" method="POST" class="space-y-4">
+          <!-- Role Name -->
+          <div class="space-y-1">
+            <label for="role_name" class="text-xs font-bold uppercase tracking-wider text-slate-400">Role Name</label>
+            <input type="text" id="role_name" name="name" required placeholder="e.g. auditor, manager"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none transition">
+            <span class="text-[10px] text-slate-500 block leading-normal mt-1">Role names will be automatically normalized to lowercase.</span>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-circle-plus"></i>
+            <span>Register Role</span>
+          </button>
+        </form>
+      </div>
+    <% } else { %>
+      <!-- Locked Card State -->
+      <div class="bg-slate-900/40 border border-slate-800/80 border-dashed rounded-2xl p-8 text-center space-y-4">
+        <div class="bg-slate-900 border border-slate-800 text-amber-500/80 p-4 rounded-full inline-flex items-center justify-center shadow shadow-amber-500/5">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-300 font-outfit">Create Role Restricted</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Your current security credentials do not authorize role creation. Request access or switch to <strong class="text-indigo-400">Admin</strong> to add new security roles.
+          </p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Right/Middle Column: Roles Matrix (2 cols span) -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2">
+          <i class="fa-solid fa-user-shield text-indigo-400 text-sm"></i>
+          <span>Role-Permission Access Control Matrix</span>
+        </h2>
+        <% if (isAdmin || user.permissions.includes('role:edit')) { %>
+          <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded border border-emerald-500/10 uppercase tracking-wider">
+            Editor Access Active
+          </span>
+        <% } else { %>
+          <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded border border-slate-700 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-lock text-[9px] mr-1"></i> Read-Only Mode
+          </span>
+        <% } %>
+      </div>
+
+      <div class="space-y-6">
+        <% 
+          const canEditRole = isAdmin || user.permissions.includes('role:edit');
+        %>
+
+        <% roles.forEach(function(role) { 
+          // Check if this is admin role. For safety, the admin checkboxes are kept checked & optionally disabled 
+          // since admin has structural master override.
+          const isRoleAdmin = role.name.toLowerCase() === 'admin';
+          const assignedPermIds = rolePermissionsMap[role.id] || [];
+        %>
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-inner">
+            <!-- Role Bar Header -->
+            <div class="bg-slate-900/60 px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <span class="text-base font-bold text-slate-200 capitalize font-outfit"><%= role.name %> Profile</span>
+                <span class="text-[10px] text-slate-500 block leading-none mt-1">ID: <%= role.id %> • Seeded profile</span>
+              </div>
+              
+              <!-- Indicator of total active permissions -->
+              <span class="self-start sm:self-auto px-2.5 py-0.5 bg-slate-800 text-slate-300 text-xs font-semibold rounded-full border border-slate-700">
+                <%= isRoleAdmin ? 'All System Access' : `${assignedPermIds.length} permissions assigned` %>
+              </span>
+            </div>
+
+            <!-- Permission Checklist Form -->
+            <form action="/roles/assign" method="POST" class="p-5 space-y-4">
+              <input type="hidden" name="role_id" value="<%= role.id %>">
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <% permissions.forEach(function(perm) { 
+                  const isChecked = isRoleAdmin || assignedPermIds.includes(perm.id);
+                %>
+                  <label class="flex items-start space-x-3 p-3 rounded-xl border border-slate-900 bg-slate-900/30 hover:bg-slate-900/50 cursor-pointer select-none transition">
+                    <div class="flex items-center h-5">
+                      <input type="checkbox" name="permissions" value="<%= perm.id %>"
+                        <%= isChecked ? 'checked' : '' %>
+                        <%= (!canEditRole || isRoleAdmin) ? 'disabled' : '' %>
+                        class="h-4 w-4 rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-600/30 focus:ring-2 focus:ring-offset-0 focus:outline-none transition cursor-pointer disabled:cursor-not-allowed">
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-200 font-mono"><%= perm.name %></span>
+                      <span class="text-[10px] text-slate-500 block capitalize mt-0.5"><%= perm.resource %> • <%= perm.action %></span>
+                    </div>
+                  </label>
+                <% }); %>
+              </div>
+
+              <!-- Save Changes block -->
+              <% if (canEditRole && !isRoleAdmin) { %>
+                <div class="flex justify-end pt-2 border-t border-slate-900">
+                  <button type="submit"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow hover:shadow-indigo-600/20 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                    <span>Apply Policy changes</span>
+                  </button>
+                </div>
+              <% } %>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,197 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<!-- Header Description -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between pb-4 border-b border-slate-900 gap-4">
+  <div>
+    <h1 class="text-3xl font-extrabold font-outfit text-white tracking-tight">User Directory</h1>
+    <p class="text-slate-400 text-sm mt-1">Manage system accounts, assign security profiles, and inspect access configurations.</p>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (locals.error) { %>
+  <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-exclamation text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Error:</span>
+      <p class="mt-0.5"><%= error %></p>
+    </div>
+  </div>
+<% } %>
+
+<% if (locals.success) { %>
+  <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-check text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Success:</span>
+      <p class="mt-0.5"><%= success %></p>
+    </div>
+  </div>
+<% } %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Left/Middle Column: Users Table (2 cols span) -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="px-6 py-4 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2">
+          <i class="fa-solid fa-users text-indigo-400 text-sm"></i>
+          <span>Active Credentials</span>
+        </h2>
+        <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-md uppercase tracking-wider">
+          <%= users.length %> records
+        </span>
+      </div>
+
+      <!-- Scrollable Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-950 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-3 px-6">Username</th>
+              <th class="py-3 px-6">Assigned Role</th>
+              <th class="py-3 px-6 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-sm">
+            <% if (users.length > 0) { %>
+              <% users.forEach(function(u) { %>
+                <tr class="hover:bg-slate-800/20 transition-colors">
+                  <!-- Username -->
+                  <td class="py-4 px-6 font-semibold text-slate-200">
+                    <div class="flex items-center space-x-3">
+                      <div class="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                        <%= u.username.charAt(0).toUpperCase() %>
+                      </div>
+                      <span><%= u.username %></span>
+                      <% if (locals.user && user.id === u.id) { %>
+                        <span class="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-400 text-[9px] font-bold uppercase rounded border border-indigo-500/10">You</span>
+                      <% } %>
+                    </div>
+                  </td>
+                  
+                  <!-- Role Badge -->
+                  <td class="py-4 px-6">
+                    <% 
+                      let roleBadge = 'bg-slate-800 text-slate-400 border-slate-700';
+                      if (u.role_name && u.role_name.toLowerCase() === 'admin') {
+                        roleBadge = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                      } else if (u.role_name && u.role_name.toLowerCase() === 'editor') {
+                        roleBadge = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+                      } else if (u.role_name && u.role_name.toLowerCase() === 'viewer') {
+                        roleBadge = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                      }
+                    %>
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-md border <%= roleBadge %>">
+                      <%= u.role_name || 'No Assigned Role' %>
+                    </span>
+                  </td>
+
+                  <!-- Action Buttons -->
+                  <td class="py-4 px-6 text-right">
+                    <% 
+                      const isAdmin = user.role_name.toLowerCase() === 'admin';
+                      const canDelete = isAdmin || user.permissions.includes('user:delete');
+                    %>
+                    <% if (canDelete) { %>
+                      <% if (locals.user && user.id === u.id) { %>
+                        <!-- Lock self-deletion -->
+                        <button disabled title="Cannot delete yourself" class="text-slate-600 cursor-not-allowed p-1.5 rounded hover:bg-slate-800/40 transition">
+                          <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                      <% } else { %>
+                        <form action="/users/delete/<%= u.id %>" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete user <%= u.username %>?');">
+                          <button type="submit" title="Remove User" class="text-red-400 hover:text-red-300 p-1.5 rounded hover:bg-red-500/10 transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                          </button>
+                        </form>
+                      <% } %>
+                    <% } else { %>
+                      <button disabled title="Requires user:delete permission" class="text-slate-700 cursor-not-allowed p-1.5 rounded transition">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                      </button>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" class="py-8 text-center text-slate-500 italic">
+                  <i class="fa-solid fa-users-slash text-2xl mb-2 block"></i>
+                  No users recorded.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Create User Form (1 col span) -->
+  <div>
+    <% 
+      const isAdmin = user.role_name.toLowerCase() === 'admin';
+      const canCreate = isAdmin || user.permissions.includes('user:create');
+    %>
+
+    <% if (canCreate) { %>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2 border-b border-slate-800 pb-3">
+          <i class="fa-solid fa-user-plus text-indigo-400 text-sm"></i>
+          <span>Add User Account</span>
+        </h2>
+
+        <form action="/users" method="POST" class="space-y-4">
+          <!-- Username -->
+          <div class="space-y-1">
+            <label for="username_create" class="text-xs font-bold uppercase tracking-wider text-slate-400">Username</label>
+            <input type="text" id="username_create" name="username" required placeholder="john_doe"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none transition">
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1">
+            <label for="password_create" class="text-xs font-bold uppercase tracking-wider text-slate-400">Password</label>
+            <input type="password" id="password_create" name="password" required placeholder="••••••••"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none transition">
+          </div>
+
+          <!-- Role -->
+          <div class="space-y-1">
+            <label for="role_id_create" class="text-xs font-bold uppercase tracking-wider text-slate-400">Security Role</label>
+            <select id="role_id_create" name="role_id" required
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2.5 text-sm text-slate-200 outline-none transition">
+              <option value="" disabled selected>Select security role...</option>
+              <% roles.forEach(function(r) { %>
+                <option value="<%= r.id %>"><%= r.name %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Register Account</span>
+          </button>
+        </form>
+      </div>
+    <% } else { %>
+      <!-- Locked Card State -->
+      <div class="bg-slate-900/40 border border-slate-800/80 border-dashed rounded-2xl p-8 text-center space-y-4">
+        <div class="bg-slate-900 border border-slate-800 text-amber-500/80 p-4 rounded-full inline-flex items-center justify-center shadow shadow-amber-500/5">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-300 font-outfit">Add Account Restricted</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Your current security credentials do not authorize user registration. Request access or switch to <strong class="text-indigo-400">Admin/Editor</strong> to create users.
+          </p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,186 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<!-- Header Description -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between pb-4 border-b border-slate-900 gap-4">
+  <div>
+    <h1 class="text-3xl font-extrabold font-outfit text-white tracking-tight font-outfit">Permission Repository</h1>
+    <p class="text-slate-400 text-sm mt-1">Manage, verify, and expand resource-level action permissions across the application namespace.</p>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (locals.error) { %>
+  <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-exclamation text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Error:</span>
+      <p class="mt-0.5"><%= error %></p>
+    </div>
+  </div>
+<% } %>
+
+<% if (locals.success) { %>
+  <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl p-4 flex items-start space-x-3">
+    <i class="fa-solid fa-circle-check text-base mt-0.5"></i>
+    <div>
+      <span class="font-bold">Success:</span>
+      <p class="mt-0.5"><%= success %></p>
+    </div>
+  </div>
+<% } %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Left/Middle Column: Permissions List (2 cols span) -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="px-6 py-4 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2">
+          <i class="fa-solid fa-key text-indigo-400 text-sm"></i>
+          <span>Registered Access Tokens</span>
+        </h2>
+        <span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-md uppercase tracking-wider">
+          <%= permissions.length %> total
+        </span>
+      </div>
+
+      <!-- Table of Permissions -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-950 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-3 px-6">Permission Key</th>
+              <th class="py-3 px-6">Target Resource</th>
+              <th class="py-3 px-6">Authorized Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-sm">
+            <% if (permissions.length > 0) { %>
+              <% permissions.forEach(function(perm) { %>
+                <tr class="hover:bg-slate-800/20 transition-colors">
+                  <!-- Permission Name / Key -->
+                  <td class="py-4 px-6">
+                    <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 text-indigo-300 font-mono text-xs rounded-lg inline-flex items-center">
+                      <i class="fa-solid fa-lock-open text-[10px] text-indigo-500 mr-2"></i>
+                      <%= perm.name %>
+                    </span>
+                  </td>
+
+                  <!-- Target Resource -->
+                  <td class="py-4 px-6 text-slate-300 capitalize font-medium">
+                    <%= perm.resource %>
+                  </td>
+
+                  <!-- Authorized Action -->
+                  <td class="py-4 px-6">
+                    <% 
+                      let actionColor = 'bg-slate-800 text-slate-400 border-slate-700';
+                      if (perm.action === 'create') {
+                        actionColor = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+                      } else if (perm.action === 'view' || perm.action === 'read') {
+                        actionColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                      } else if (perm.action === 'edit' || perm.action === 'update') {
+                        actionColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                      } else if (perm.action === 'delete') {
+                        actionColor = 'bg-red-500/10 text-red-400 border-red-500/20';
+                      }
+                    %>
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-md border capitalize <%= actionColor %>">
+                      <%= perm.action %>
+                    </span>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" class="py-8 text-center text-slate-500 italic">
+                  <i class="fa-solid fa-ban text-2xl mb-2 block"></i>
+                  No permissions recorded.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Add Permission Form (1 col span) -->
+  <div>
+    <% 
+      const isAdmin = user.role_name.toLowerCase() === 'admin';
+      const canCreatePerm = isAdmin || user.permissions.includes('permission:create');
+    %>
+
+    <% if (canCreatePerm) { %>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <h2 class="font-bold text-white font-outfit flex items-center space-x-2 border-b border-slate-800 pb-3">
+          <i class="fa-solid fa-square-plus text-indigo-400 text-sm"></i>
+          <span>Create Permission Mapping</span>
+        </h2>
+
+        <form action="/permissions" method="POST" class="space-y-4">
+          <!-- Resource -->
+          <div class="space-y-1">
+            <label for="resource" class="text-xs font-bold uppercase tracking-wider text-slate-400">Target Resource</label>
+            <input type="text" id="resource" name="resource" required placeholder="e.g. document, user, report"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none transition">
+            <span class="text-[10px] text-slate-500 block leading-normal mt-1">Specify what object is being accessed.</span>
+          </div>
+
+          <!-- Action -->
+          <div class="space-y-1">
+            <label for="action" class="text-xs font-bold uppercase tracking-wider text-slate-400">Authorized Action</label>
+            <input type="text" id="action" name="action" required placeholder="e.g. view, create, edit, delete"
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none transition">
+            <span class="text-[10px] text-slate-500 block leading-normal mt-1">Specify the type of operation.</span>
+          </div>
+
+          <!-- Helper description showing computed mapping -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 leading-normal space-y-1">
+            <span class="font-bold text-slate-300 block"><i class="fa-solid fa-calculator mr-1 text-indigo-400"></i> Computed Syntax</span>
+            <p>The permission key will be saved as: <code class="text-indigo-300 font-mono" id="computed-syntax">resource:action</code></p>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Register Permission</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Add minor JS in-place to update the computed syntax dynamically -->
+      <script>
+        const resInput = document.getElementById('resource');
+        const actInput = document.getElementById('action');
+        const compText = document.getElementById('computed-syntax');
+
+        function updateComputed() {
+          const res = resInput.value.trim().toLowerCase() || 'resource';
+          const act = actInput.value.trim().toLowerCase() || 'action';
+          compText.textContent = `${res}:${act}`;
+        }
+
+        resInput.addEventListener('input', updateComputed);
+        actInput.addEventListener('input', updateComputed);
+      </script>
+
+    <% } else { %>
+      <!-- Locked Card State -->
+      <div class="bg-slate-900/40 border border-slate-800/80 border-dashed rounded-2xl p-8 text-center space-y-4">
+        <div class="bg-slate-900 border border-slate-800 text-amber-500/80 p-4 rounded-full inline-flex items-center justify-center shadow shadow-amber-500/5">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-bold text-slate-300 font-outfit">Add Permission Restricted</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Your current security credentials do not authorize permission registrations. Request access or switch to <strong class="text-indigo-400">Admin</strong> to add new permission mappings.
+          </p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

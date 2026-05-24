@@ -1,0 +1,59 @@
+<%- include('./layouts/header') %>
+<%- include('./layouts/sidebar') %>
+
+<!-- 403 Forbidden Access Page -->
+<div class="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+  <!-- Glowing Security Icon -->
+  <div class="relative mb-6">
+    <div class="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl animate-pulse"></div>
+    <div class="relative bg-slate-900 border-2 border-amber-500/30 text-amber-500 p-6 rounded-full inline-flex items-center justify-center shadow-lg shadow-amber-500/10">
+      <i class="fa-solid fa-shield-halved text-5xl"></i>
+    </div>
+  </div>
+
+  <h1 class="text-4xl font-extrabold font-outfit text-white tracking-tight mb-2">Access Restricted</h1>
+  <p class="text-slate-400 max-w-md mx-auto text-sm mb-8 leading-relaxed">
+    Your current security context does not grant access to this administrative operation.
+  </p>
+
+  <!-- Detailed Diagnostic Box -->
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full text-left space-y-4 shadow-xl">
+    <div class="flex items-center space-x-3 pb-3 border-b border-slate-800">
+      <span class="p-1.5 bg-amber-500/10 text-amber-500 rounded-lg text-xs"><i class="fa-solid fa-key"></i></span>
+      <div>
+        <span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Required Permission</span>
+        <span class="text-amber-400 font-mono text-sm block font-semibold"><%= requiredPermission %></span>
+      </div>
+    </div>
+
+    <div>
+      <span class="text-slate-400 text-xs uppercase font-bold tracking-wider block mb-2">Your Current Permissions</span>
+      <% if (locals.user && user.permissions.length > 0) { %>
+        <div class="flex flex-wrap gap-2">
+          <% user.permissions.forEach(function(perm) { %>
+            <span class="px-2.5 py-1 bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs rounded-lg flex items-center">
+              <i class="fa-solid fa-check text-[10px] text-indigo-400 mr-1.5"></i>
+              <%= perm %>
+            </span>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <span class="text-xs text-slate-500 italic block"><i class="fa-solid fa-ban mr-1"></i> No active permissions associated with this role.</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Navigation Action buttons -->
+  <div class="mt-8 flex items-center space-x-4">
+    <button onclick="history.back()" class="px-5 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800/80 text-slate-300 font-semibold rounded-xl text-sm transition flex items-center space-x-2">
+      <i class="fa-solid fa-arrow-left text-xs"></i>
+      <span>Go Back</span>
+    </button>
+    <a href="/users" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/20 transition flex items-center space-x-2">
+      <i class="fa-solid fa-house text-xs"></i>
+      <span>Dashboard</span>
+    </a>
+  </div>
+</div>
+
+<%- include('./layouts/footer') %>

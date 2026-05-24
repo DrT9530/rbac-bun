@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'RBAC Management System' %></title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <!-- Compiled TailwindCSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="h-full font-sans antialiased overflow-hidden flex flex-col">
+
+  <!-- Top Header Navigation -->
+  <header class="bg-slate-900 border-b border-slate-800 h-16 flex items-center justify-between px-6 z-30 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="bg-indigo-600 text-white p-2 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-600/30">
+        <i class="fa-solid fa-shield-halved text-xl"></i>
+      </div>
+      <div>
+        <span class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-400 font-outfit">
+          SentryRBAC
+        </span>
+        <span class="text-xs text-slate-400 block -mt-1 font-medium">Enterprise Access Control</span>
+      </div>
+    </div>
+
+    <!-- Header Actions (Profile and Switcher) -->
+    <div class="flex items-center space-x-6">
+      <% if (locals.user) { %>
+        <!-- Testing Role Switcher -->
+        <div class="hidden md:flex items-center space-x-2 bg-slate-950 border border-slate-800 rounded-full px-3 py-1 text-xs">
+          <span class="text-slate-400 font-medium"><i class="fa-solid fa-wand-magic-sparkles mr-1 text-indigo-400"></i> Quick-Switch:</span>
+          <a href="/auth/switch/admin" class="hover:text-indigo-400 px-2 py-0.5 rounded transition <%= user.username === 'admin' ? 'bg-indigo-600/20 text-indigo-300 font-semibold' : 'text-slate-400' %>">Admin</a>
+          <a href="/auth/switch/editor" class="hover:text-cyan-400 px-2 py-0.5 rounded transition <%= user.username === 'editor' ? 'bg-cyan-600/20 text-cyan-300 font-semibold' : 'text-slate-400' %>">Editor</a>
+          <a href="/auth/switch/viewer" class="hover:text-emerald-400 px-2 py-0.5 rounded transition <%= user.username === 'viewer' ? 'bg-emerald-600/20 text-emerald-300 font-semibold' : 'text-slate-400' %>">Viewer</a>
+        </div>
+
+        <!-- User Information Badge -->
+        <div class="flex items-center space-x-3 border-l border-slate-800 pl-6">
+          <div class="text-right">
+            <span class="text-sm font-semibold text-slate-200 block"><%= user.username %></span>
+            <!-- Dynamic Role color -->
+            <% 
+              let badgeColor = 'bg-slate-800 text-slate-400 border-slate-700';
+              if (user.role_name.toLowerCase() === 'admin') {
+                badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+              } else if (user.role_name.toLowerCase() === 'editor') {
+                badgeColor = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+              } else if (user.role_name.toLowerCase() === 'viewer') {
+                badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+              }
+            %>
+            <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border <%= badgeColor %>">
+              <i class="fa-solid fa-circle text-[6px] mr-1.5 animate-pulse"></i>
+              <%= user.role_name %>
+            </span>
+          </div>
+
+          <!-- Avatar Image Placeholder -->
+          <div class="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-300">
+            <%= user.username.charAt(0).toUpperCase() %>
+          </div>
+
+          <!-- Logout Button -->
+          <a href="/logout" title="Sign Out" class="ml-2 text-slate-400 hover:text-red-400 p-2 rounded-lg hover:bg-slate-800/50 transition">
+            <i class="fa-solid fa-arrow-right-from-bracket text-lg"></i>
+          </a>
+        </div>
+      <% } else { %>
+        <span class="text-sm text-slate-400">Welcome, Guest</span>
+      <% } %>
+    </div>
+  </header>
+
+  <!-- Container for Sidebar + Content -->
+  <div class="flex flex-1 overflow-hidden">

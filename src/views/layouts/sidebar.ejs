@@ -1,0 +1,76 @@
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-20">
+  <!-- Navigation Links -->
+  <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+    
+    <!-- Group Title -->
+    <div class="px-3 mb-2">
+      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Main Modules</p>
+    </div>
+
+    <% if (locals.user) { 
+      const isAdmin = user.role_name.toLowerCase() === 'admin';
+      const hasUserView = isAdmin || user.permissions.includes('user:view');
+      const hasRoleView = isAdmin || user.permissions.includes('role:view');
+      const hasPermView = isAdmin || user.permissions.includes('permission:view');
+    %>
+
+      <!-- Users Navigation -->
+      <a href="/users" 
+         class="flex items-center justify-between px-3 py-2.5 rounded-xl transition group text-sm <%= typeof title !== 'undefined' && title === 'User Management' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' %>">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-users text-base <%= typeof title !== 'undefined' && title === 'User Management' ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300' %>"></i>
+          <span>Users</span>
+        </div>
+        <% if (!hasUserView) { %>
+          <i class="fa-solid fa-lock text-xs text-amber-500/70" title="Requires user:view"></i>
+        <% } %>
+      </a>
+
+      <!-- Roles Navigation -->
+      <a href="/roles" 
+         class="flex items-center justify-between px-3 py-2.5 rounded-xl transition group text-sm <%= typeof title !== 'undefined' && title === 'Role Management' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' %>">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-user-gear text-base <%= typeof title !== 'undefined' && title === 'Role Management' ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300' %>"></i>
+          <span>Roles & Access</span>
+        </div>
+        <% if (!hasRoleView) { %>
+          <i class="fa-solid fa-lock text-xs text-amber-500/70" title="Requires role:view"></i>
+        <% } %>
+      </a>
+
+      <!-- Permissions Navigation -->
+      <a href="/permissions" 
+         class="flex items-center justify-between px-3 py-2.5 rounded-xl transition group text-sm <%= typeof title !== 'undefined' && title === 'Permission Management' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' %>">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-key text-base <%= typeof title !== 'undefined' && title === 'Permission Management' ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300' %>"></i>
+          <span>Permissions</span>
+        </div>
+        <% if (!hasPermView) { %>
+          <i class="fa-solid fa-lock text-xs text-amber-500/70" title="Requires permission:view"></i>
+        <% } %>
+      </a>
+
+    <% } %>
+  </nav>
+
+  <!-- Sidebar Footer (System Status) -->
+  <div class="p-4 border-t border-slate-800 bg-slate-900/50 text-xs">
+    <div class="flex items-center justify-between text-slate-500 mb-1">
+      <span>Runtime:</span>
+      <span class="text-indigo-400 font-semibold flex items-center">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-ping"></span>
+        Bun.js
+      </span>
+    </div>
+    <div class="flex items-center justify-between text-slate-500">
+      <span>Database:</span>
+      <span class="text-cyan-400 font-semibold">MySQL</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Main Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto bg-slate-950 p-6 md:p-8 flex flex-col justify-between">
+  <!-- Content wrapper -->
+  <div class="w-full max-w-7xl mx-auto space-y-6">
